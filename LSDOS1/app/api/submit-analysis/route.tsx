@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@clerk/clerk-sdk-node'; // Adjust the import if necessary for Clerk
+// import { verifyToken } from '@clerk/clerk-sdk-node'; // Adjust the import if necessary for Clerk
 
 export async function POST(req: NextRequest) {
   try {

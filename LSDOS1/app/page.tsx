@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from './AuthContext';
 import { useEffect } from 'react';
 import { SignInButton } from "@clerk/nextjs";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/app/components/ui/button";
 
 export default function HomePage() {
   const router = useRouter();

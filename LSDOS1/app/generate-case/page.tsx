@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from 'next/navigation';
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { useAuth } from "@/AuthContext";
+import { Button } from "@/app/components/ui/button";
+import { Textarea } from "@/app/components/ui/textarea";
+import { useAuth } from "@/app/AuthContext";
 
 interface CaseData {
   case_id: string;

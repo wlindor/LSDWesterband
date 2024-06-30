@@ -3,8 +3,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from "@/AuthContext";
-import { Button } from "@/components/ui/button";
+import { useAuth } from "@/app/AuthContext";
+import { Button } from "@/app/components/ui/button";
 import { useClerk } from "@clerk/nextjs";
 
 const Dashboard = () => {
