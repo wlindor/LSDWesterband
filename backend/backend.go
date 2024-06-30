@@ -55,7 +55,7 @@ func connectToMongoDB() {
 }
 
 func connectToOpenAI() {
-    err := godotenv.Load("/workspaces/ROAILSD/.env")
+    err := godotenv.Load("/workspaces/claude-engineer/.env")
     if err != nil {
         log.Fatalf("Error loading .env file: %v", err)
     }

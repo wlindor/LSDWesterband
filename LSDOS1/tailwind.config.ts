@@ -13,8 +13,32 @@ const config: Config = {
         "gradient-conic":
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
       },
+      keyframes: {
+        "fade-in": {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        "blink-cursor": {
+          "0%, 100%": { opacity: "0" },
+          "50%": { opacity: "1" },
+        },
+      },
+      animation: {
+        "fade-in": "fade-in 1s ease-out",
+        "fade-in-delayed": "fade-in 1s ease-out 0.5s",
+        "blink-cursor": "blink-cursor 0.7s infinite",
+      },
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/forms'),
+    require('@tailwindcss/typography'),
+    require('@tailwindcss/aspect-ratio'),
+  ],
+  darkMode: 'class',
+  future: {
+    hoverOnlyWhenSupported: true,
+  },
 };
+
 export default config;

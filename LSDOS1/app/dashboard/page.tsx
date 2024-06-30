@@ -3,13 +3,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from "@/app/AuthContext";
+import { useAuth } from "@/AuthContext";
+import { Button } from "@/components/ui/button";
+import { useClerk } from "@clerk/nextjs";
 
 const Dashboard = () => {
   const { user } = useAuth();
   const [billableHours, setBillableHours] = useState(0);
   const [cases, setCases] = useState<any[]>([]);
   const router = useRouter();
+  const { signOut } = useClerk();
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -32,8 +35,13 @@ const Dashboard = () => {
     fetchUserData();
   }, [user]);
 
-  const handleSignOut = () => {
-    // Handle Clerk sign out
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      router.push('/'); // Redirect to the home page after signing out
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   const handleGenerateCase = async () => {
@@ -43,7 +51,7 @@ const Dashboard = () => {
     }
 
     try {
-      const response = await fetch('/api/generate-case', {
+      const response = await fetch('/app/api/generate-case', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -69,62 +77,62 @@ const Dashboard = () => {
   const progress = (billableHours % 2000) / 2000;
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100">
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100 dark:bg-gray-900">
       <div className="flex justify-between w-full max-w-4xl mb-4">
-        <button onClick={handleSignOut} className="w-24 p-2 bg-gray-200 rounded-md hover:bg-gray-300">
+        <Button variant="outline" onClick={handleSignOut}>
           Log Out
-        </button>
+        </Button>
         <div className="text-center">
-          <h1 className="text-3xl font-bold">ROAI</h1>
-          <p className="text-xl">LSD</p>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">ROAI</h1>
+          <p className="text-xl text-slate-700 dark:text-slate-300">LSD</p>
         </div>
         <div className="w-24" />
       </div>
       <div className="flex justify-between w-full max-w-4xl">
-        <div className="w-1/3 p-4 bg-white rounded shadow">
-          <h2 className="text-2xl font-bold">File Cabinet</h2>
-          <p>Connect to cases</p>
+        <div className="w-1/3 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">File Cabinet</h2>
+          <p className="text-slate-700 dark:text-slate-300">Connect to cases</p>
           <ul className="mt-4">
             {cases.map((caseItem, index) => (
               <li key={index} className="mb-2">
-                <button onClick={() => router.push(`/cases/${caseItem}`)} className="text-blue-500 hover:underline">
+                <Button variant="link" onClick={() => router.push(`/cases/${caseItem}`)}>
                   {caseItem}
-                </button>
+                </Button>
               </li>
             ))}
           </ul>
         </div>
-        <div className="flex flex-col items-center justify-center w-1/3 p-4 bg-white rounded shadow">
-          <div className="text-4xl font-bold">{cases.length}</div>
-          <p>Cases</p>
+        <div className="flex flex-col items-center justify-center w-1/3 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+          <div className="text-4xl font-bold text-slate-900 dark:text-slate-100">{cases.length}</div>
+          <p className="text-slate-700 dark:text-slate-300">Cases</p>
         </div>
-        <div className="flex flex-col items-center justify-between w-1/3 p-4 bg-white rounded shadow">
+        <div className="flex flex-col items-center justify-between w-1/3 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
           <div className="w-full">
-            <div className="text-sm font-medium text-gray-900 mb-2">Total Hours Billed</div>
+            <div className="text-sm font-medium text-slate-900 dark:text-slate-100 mb-2">Total Hours Billed</div>
             <div className="relative pt-1">
               <div className="flex mb-2 items-center justify-between">
                 <div>
-                  <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-pink-600 bg-pink-200">
-                    {progress * 100}%
+                  <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-pink-600 bg-pink-200 dark:text-pink-200 dark:bg-pink-800">
+                    {Math.round(progress * 100)}%
                   </span>
                 </div>
                 <div className="text-right">
-                  <span className="text-xs font-semibold inline-block text-pink-600">
+                  <span className="text-xs font-semibold inline-block text-pink-600 dark:text-pink-300">
                     {billableHours} / 2000
                   </span>
                 </div>
               </div>
-              <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-pink-200">
+              <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-pink-200 dark:bg-pink-800">
                 <div style={{ width: `${progress * 100}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-pink-500"></div>
               </div>
             </div>
           </div>
-          <button onClick={handleGenerateCase} className="mt-4 p-2 bg-purple-500 text-white rounded-md hover:bg-purple-600">
+          <Button variant="default" onClick={handleGenerateCase} className="mt-4">
             Start Case
-          </button>
+          </Button>
           <div className="flex items-center justify-center mt-4">
-            <BanknoteIcon className="w-8 h-8 mr-2" />
-            <span className="text-lg font-bold">ROAI Earnings</span>
+            <BanknoteIcon className="w-8 h-8 mr-2 text-slate-900 dark:text-slate-100" />
+            <span className="text-lg font-bold text-slate-900 dark:text-slate-100">ROAI Earnings</span>
           </div>
         </div>
       </div>
