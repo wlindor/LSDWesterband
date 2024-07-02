@@ -27,7 +27,7 @@ CONTINUATION_EXIT_PHRASE = "AUTOMODE_COMPLETE"
 MAX_CONTINUATION_ITERATIONS = 25
 
 # Initialize the Anthropic client
-client = Anthropic(api_key="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")
+client = Anthropic(api_key="")
 
 # Initialize the Tavily client
 tavily = TavilyClient(api_key="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")
