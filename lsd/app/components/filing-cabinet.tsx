@@ -1,5 +1,3 @@
-// components/filing-cabinet.tsx
-
 import React, { useEffect, useState } from 'react';
 
 interface FilingCabinetProps {

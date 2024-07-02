@@ -40,9 +40,10 @@ type User struct {
 }
 
 type Analysis struct {
-	CaseID    string    `json:"case_id" bson:"case_id"`
-	Content   string    `json:"content" bson:"content"`
-	Timestamp time.Time `json:"timestamp" bson:"timestamp"`
+	CaseID     string    `json:"case_id" bson:"case_id"`
+	Content    string    `json:"content" bson:"content"`
+	UserID     string    `json:"user_id" bson:"user_id"`
+	Timestamp  time.Time `json:"timestamp" bson:"timestamp"`
 }
 
 type Submission struct {
@@ -213,31 +214,40 @@ func generateCase(w http.ResponseWriter, r *http.Request) {
 }
 
 func submitAnalysis(w http.ResponseWriter, r *http.Request) {
-	var analysis Analysis
-	if err := json.NewDecoder(r.Body).Decode(&analysis); err != nil {
-		http.Error(w, fmt.Sprintf("Error decoding request body: %v", err), http.StatusBadRequest)
-		return
-	}
+    var analysis Analysis
+    if err := json.NewDecoder(r.Body).Decode(&analysis); err != nil {
+        http.Error(w, fmt.Sprintf("Error decoding request body: %v", err), http.StatusBadRequest)
+        return
+    }
 
-	log.Printf("Received analysis: %+v\n", analysis)
+    log.Printf("Received analysis: %+v\n", analysis) // Log the received analysis for debugging
 
-	if analysis.CaseID == "" {
-		http.Error(w, "case_id is required", http.StatusBadRequest)
-		return
-	}
+    if analysis.CaseID == "" {
+        http.Error(w, "case_id is required", http.StatusBadRequest)
+        return
+    }
 
-	analysis.Timestamp = time.Now()
+    analysis.Timestamp = time.Now()
 
-	collection := client.Database("Cases").Collection("Analyses")
-	_, err := collection.InsertOne(context.TODO(), analysis)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Database insertion error: %v", err), http.StatusInternalServerError)
-		return
-	}
+    collection := client.Database("Cases").Collection("Analyses")
+    _, err := collection.InsertOne(context.TODO(), analysis)
+    if err != nil {
+        http.Error(w, fmt.Sprintf("Database insertion error: %v", err), http.StatusInternalServerError)
+        return
+    }
 
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "Analysis submitted successfully")
+    userCollection := client.Database("Users").Collection("UserData")
+    filter := bson.M{"id": analysis.UserID}
+    update := bson.M{"$push": bson.M{"submitted_cases": analysis.CaseID}}
+    _, err = userCollection.UpdateOne(context.TODO(), filter, update)
+    if err != nil {
+        log.Printf("Error updating user data: %v", err)
+    }
+
+    w.WriteHeader(http.StatusOK)
+    fmt.Fprintf(w, "Analysis submitted successfully")
 }
+
 
 func litigateCase(w http.ResponseWriter, r *http.Request) {
 	var submission Submission
@@ -305,12 +315,12 @@ func gradeSubmission(w http.ResponseWriter, r *http.Request) {
 }
 
 func createOrUpdateUser(userID string) error {
-	collection := client.Database("Users").Collection("UserData")
-	filter := bson.M{"id": userID}
-	update := bson.M{"$setOnInsert": bson.M{"id": userID, "total_hours": 0, "completed_cases": []string{}, "ongoing_cases": []string{}}}
-	opts := options.Update().SetUpsert(true)
-	_, err := collection.UpdateOne(context.TODO(), filter, update, opts)
-	return err
+    collection := client.Database("Users").Collection("UserData")
+    filter := bson.M{"id": userID}
+    update := bson.M{"$setOnInsert": bson.M{"id": userID, "total_hours": 0, "completed_cases": []string{}, "ongoing_cases": []string{}, "submitted_cases": []string{}}}
+    opts := options.Update().SetUpsert(true)
+    _, err := collection.UpdateOne(context.TODO(), filter, update, opts)
+    return err
 }
 
 func updateUserHours(userID string, hours int) error {
@@ -479,21 +489,30 @@ func getUserDataHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getUserCasesHandler(w http.ResponseWriter, r *http.Request) {
-	userID := r.URL.Query().Get("user_id")
-	if userID == "" {
-		http.Error(w, "user_id is required", http.StatusBadRequest)
-		return
-	}
+    userID := r.URL.Query().Get("user_id")
+    if userID == "" {
+        http.Error(w, "user_id is required", http.StatusBadRequest)
+        return
+    }
 
-	cases, err := getUserCases(userID)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Error fetching user cases: %v", err), http.StatusInternalServerError)
-		return
-	}
+    collection := client.Database("Cases").Collection("AllCases")
+    cursor, err := collection.Find(context.TODO(), bson.M{"user_id": userID})
+    if err != nil {
+        http.Error(w, fmt.Sprintf("Database query error: %v", err), http.StatusInternalServerError)
+        return
+    }
+    defer cursor.Close(context.TODO())
 
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(cases)
+    var cases []Case
+    if err = cursor.All(context.TODO(), &cases); err != nil {
+        http.Error(w, fmt.Sprintf("Error decoding cases: %v", err), http.StatusInternalServerError)
+        return
+    }
+
+    w.WriteHeader(http.StatusOK)
+    json.NewEncoder(w).Encode(cases)
 }
+
 
 func main() {
 	connectToMongoDB()

@@ -1,5 +1,3 @@
-// app/dashboard/page.tsx
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -36,7 +34,7 @@ const Dashboard = () => {
         const data = await response.json();
         setUserData(data);
         setBillableHours(data.total_hours || 0);
-        setCases(data.cases || []);
+        setCases(data.submitted_cases || []);
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
@@ -56,37 +54,37 @@ const Dashboard = () => {
 
   const handleGenerateCase = async () => {
     if (!user) {
-      console.error('User not authenticated');
-      return;
+        console.error('User not authenticated');
+        return;
     }
 
     try {
-      const response = await fetch(`/api/generate-case`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ user_id: user.id }),
-      });
+        const response = await fetch(`/api/generate-case`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ user_id: user.id }),
+        });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`HTTP error! status: ${response.status} - ${errorText}`);
-        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
-      }
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`HTTP error! status: ${response.status} - ${errorText}`);
+            throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+        }
 
-      const text = await response.text();
-      try {
-        const data = JSON.parse(text);
-        console.log('Received data:', data);
-        const caseDataString = encodeURIComponent(JSON.stringify(data));
-        router.push(`/generate-case?caseData=${caseDataString}`);
-      } catch (jsonError) {
-        console.error('Error parsing JSON:', jsonError, 'Response text:', text);
-        throw new Error('Error parsing JSON');
-      }
+        const text = await response.text();
+        try {
+            const data = JSON.parse(text);
+            console.log('Received data:', data);
+            const caseDataString = encodeURIComponent(JSON.stringify(data));
+            router.push(`/generate-case?caseData=${caseDataString}`);
+        } catch (jsonError) {
+            console.error('Error parsing JSON:', jsonError, 'Response text:', text);
+            throw new Error('Error parsing JSON');
+        }
     } catch (error) {
-      console.error('Error generating case:', error);
+        console.error('Error generating case:', error);
     }
   };
 
