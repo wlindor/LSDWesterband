@@ -1,6 +1,8 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
   "/page": "app/page.js",
-  "/favicon.ico/route": "app/favicon.ico/route.js",
-  "/dashboard/page": "app/dashboard/page.js"
+  "/dashboard/page": "app/dashboard/page.js",
+  "/api/generate-case/route": "app/api/generate-case/route.js",
+  "/generate-case/page": "app/generate-case/page.js",
+  "/api/submit-analysis/route": "app/api/submit-analysis/route.js"
 }

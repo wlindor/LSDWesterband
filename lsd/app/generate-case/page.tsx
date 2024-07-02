@@ -1,4 +1,3 @@
-// app/generate-case/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -8,8 +7,9 @@ import { Textarea } from "@/app/components/ui/textarea";
 import { useAuth } from "@/app/AuthContext";
 
 interface CaseData {
-  case_id: string;
-  case_facts: string;
+  id: string;         // Ensure this matches your backend structure
+  user_id: string;    // Ensure this matches your backend structure
+  content: string;    // Ensure this matches your backend structure
 }
 
 const GenerateCase = () => {
@@ -62,7 +62,7 @@ const GenerateCase = () => {
     }
 
     const requestBody = {
-      case_id: caseData.case_id,
+      case_id: caseData.id,
       content: analysis,
       user_id: user.id,
     };
@@ -110,7 +110,7 @@ const GenerateCase = () => {
             caseData && (
               <>
                 <h2 className="text-2xl font-bold">Case Facts</h2>
-                <p className="mt-4">{caseData.case_facts}</p>
+                <p className="mt-4">{caseData.content}</p>  {/* Updated this line to ensure content is displayed */}
               </>
             )
           )}

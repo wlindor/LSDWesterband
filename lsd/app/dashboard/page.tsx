@@ -1,4 +1,5 @@
 // app/dashboard/page.tsx
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -9,9 +10,12 @@ import { useClerk } from "@clerk/nextjs";
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Briefcase, Award, User, Scale, GraduationCap } from 'lucide-react';
+import Link from 'next/link';
+import FilingCabinet from '../components/filing-cabinet';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const [userData, setUserData] = useState<any>(null);
   const [billableHours, setBillableHours] = useState(0);
   const [cases, setCases] = useState<any[]>([]);
   const router = useRouter();
@@ -25,9 +29,13 @@ const Dashboard = () => {
       }
 
       try {
-        const response = await fetch(`/api/users/${user.id}`);
+        const response = await fetch(`/api/get-user-data?user_id=${user.id}`);
+        if (!response.ok) {
+          throw new Error(`Error fetching user data: ${response.statusText}`);
+        }
         const data = await response.json();
-        setBillableHours(data.billableHours || 0);
+        setUserData(data);
+        setBillableHours(data.total_hours || 0);
         setCases(data.cases || []);
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -40,7 +48,7 @@ const Dashboard = () => {
   const handleSignOut = async () => {
     try {
       await signOut();
-      router.push('/'); // Redirect to the home page after signing out
+      router.push('/');
     } catch (error) {
       console.error('Error signing out:', error);
     }
@@ -53,7 +61,7 @@ const Dashboard = () => {
     }
 
     try {
-      const response = await fetch('/api/generate-case', {
+      const response = await fetch(`/api/generate-case`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -62,19 +70,27 @@ const Dashboard = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error(`HTTP error! status: ${response.status} - ${errorText}`);
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
       }
 
-      const data = await response.json();
-
-      const caseDataString = encodeURIComponent(JSON.stringify(data));
-      router.push(`/generate-case?caseData=${caseDataString}`);
+      const text = await response.text();
+      try {
+        const data = JSON.parse(text);
+        console.log('Received data:', data);
+        const caseDataString = encodeURIComponent(JSON.stringify(data));
+        router.push(`/generate-case?caseData=${caseDataString}`);
+      } catch (jsonError) {
+        console.error('Error parsing JSON:', jsonError, 'Response text:', text);
+        throw new Error('Error parsing JSON');
+      }
     } catch (error) {
       console.error('Error generating case:', error);
     }
   };
 
-  const progress = (billableHours % 2000) / 2000 * 100;
+  const progress = userData ? (userData.total_hours % 2000) / 2000 * 100 : 0;
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-8">
@@ -87,29 +103,17 @@ const Dashboard = () => {
         <Card className="mb-8">
           <CardContent className="p-6">
             <div className="grid grid-cols-3 gap-6 items-center">
-              <div>
-                <h2 className="text-xl font-semibold mb-2">File Cabinet</h2>
-                <p className="text-gray-600 dark:text-gray-400">Connect to cases</p>
-                <ul className="mt-4">
-                  {cases.map((caseItem, index) => (
-                    <li key={index} className="mb-2">
-                      <Button variant="link" onClick={() => router.push(`/cases/${caseItem}`)}>
-                        {caseItem}
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              {user && <FilingCabinet userId={user.id} />}
               <div className="text-center">
-                <span className="text-4xl font-bold">{cases.length}</span>
-                <p>Cases</p>
+                <span className="text-4xl font-bold">{userData?.completed_cases.length || 0}</span>
+                <p>Completed Cases</p>
               </div>
               <div>
                 <h3 className="font-semibold mb-2">Total Hours Billed</h3>
                 <Progress value={progress} className="mb-2" />
                 <p className="text-right">{billableHours} / 2000</p>
                 <Button variant="default" onClick={handleGenerateCase} className="mt-4 w-full">
-                  Start Case
+                  Start New Case
                 </Button>
               </div>
             </div>
@@ -151,7 +155,9 @@ const Dashboard = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Button variant="default" className="w-full">Start Judging</Button>
+              <Link href="/judge-case" passHref>
+                <Button variant="default" className="w-full">Start Judging</Button>
+              </Link>
             </CardContent>
           </Card>
           <Card>
@@ -162,7 +168,9 @@ const Dashboard = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Button variant="default" className="w-full">Choose Side</Button>
+              <Link href="/litigate-case" passHref>
+                <Button variant="default" className="w-full">Choose Side</Button>
+              </Link>
             </CardContent>
           </Card>
           <Card>
@@ -173,9 +181,23 @@ const Dashboard = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Button variant="default" className="w-full">Start Grading</Button>
+              <Link href="/grade-case" passHref>
+                <Button variant="default" className="w-full">Start Grading</Button>
+              </Link>
             </CardContent>
           </Card>
+        </div>
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold mb-4">File Cabinet</h2>
+          <ul className="mt-4">
+            {cases.map((caseItem, index) => (
+              <li key={index} className="mb-2">
+                <Link href={`/cases/${caseItem.id}`}>
+                  <Button variant="link">{caseItem.case_name}</Button>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       </main>
     </div>

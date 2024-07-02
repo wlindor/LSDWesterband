@@ -38,12 +38,8 @@ export async function POST(req: NextRequest) {
     console.log('Backend response received:', data);
 
     return NextResponse.json(data);
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      console.error('Error generating case:', error.message, error.stack);
-    } else {
-      console.error('Unknown error generating case:', error);
-    }
+  } catch (error) {
+    console.error('Error generating case:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

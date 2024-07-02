@@ -8,7 +8,11 @@ require (
 	go.mongodb.org/mongo-driver v1.15.1
 )
 
+require github.com/go-jose/go-jose/v3 v3.0.1 // indirect
+
 require (
+	github.com/clerk/clerk-sdk-go/v2 v2.0.4
+	github.com/clerkinc/clerk-sdk-go v1.49.1
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/montanaflynn/stats v0.7.1 // indirect

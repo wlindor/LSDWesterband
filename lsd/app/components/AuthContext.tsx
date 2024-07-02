@@ -7,6 +7,7 @@ import type { UserResource } from '@clerk/types';
 
 interface AuthContextType {
   user: UserResource | null;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,10 +25,10 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
 
   return (
-    <AuthContext.Provider value={{ user: user ?? null }}>
+    <AuthContext.Provider value={{ user: user ?? null, isLoading: !isLoaded }}>
       {children}
     </AuthContext.Provider>
   );
